@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Casa Turni</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream:#F5F0E8; --ink:#1A1A18; --sand:#D4C5A9;
+    --light:#EDE8DF; --border:#C8BFA8; --sage:#6A9E6E; --rust:#C0592A;
+    --c-edo:#C0DD97; --c-edo-t:#27500A;
+    --c-ag:#B5D4F4;  --c-ag-t:#0C447C;
+    --c-an:#FAC775;  --c-an-t:#633806;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;background:var(--cream);color:var(--ink);font-family:'DM Mono',monospace;}
+  body{display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom);}
+
+  .top{
+    padding:1rem 1rem .6rem;
+    border-bottom:1.5px solid var(--border);
+    background:var(--cream);
+    position:sticky;top:0;z-index:10;
+  }
+  .top-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+  .title{font-family:'DM Serif Display',serif;font-size:1.5rem;letter-spacing:-.02em;line-height:1;}
+  .title em{font-style:italic;color:var(--rust);}
+  .subtitle{font-size:.58rem;color:#888;letter-spacing:.1em;text-transform:uppercase;margin-top:3px;}
+
+  .stats-mini{display:flex;gap:5px;}
+  .stat{background:var(--light);border:1.5px solid var(--border);padding:.45rem .4rem;text-align:center;border-radius:4px;min-width:58px;}
+  .stat small{display:block;font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:#888;margin-bottom:.1rem;}
+  .stat span{font-family:'DM Serif Display',serif;font-size:.95rem;}
+  .stat.edo span{color:var(--c-edo-t);} .stat.ag span{color:var(--c-ag-t);} .stat.an span{color:var(--c-an-t);}
+
+  .week-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.5rem 1rem;border-bottom:1px solid var(--border);
+    background:var(--cream);
+  }
+  .week-nav button{
+    background:none;border:1.5px solid var(--border);color:var(--ink);
+    font-family:'DM Mono',monospace;font-size:.8rem;padding:.45rem 1rem;
+    cursor:pointer;border-radius:4px;
+  }
+  .week-nav button:active{background:var(--ink);color:var(--cream);}
+  .week-nav button:disabled{opacity:.25;pointer-events:none;}
+  .week-info{text-align:center;flex:1;}
+  .week-label{font-family:'DM Serif Display',serif;font-size:.95rem;}
+  .week-sub{font-size:.58rem;color:#999;letter-spacing:.05em;margin-top:2px;}
+
+  .days-scroll{
+    flex:1;overflow-y:auto;padding:.75rem 1rem 1.5rem;
+    display:flex;flex-direction:column;gap:.7rem;
+  }
+
+  .day-card{
+    border:1.5px solid var(--border);border-radius:8px;
+    overflow:hidden;background:var(--light);
+  }
+  .day-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:.5rem .8rem;
+    background:var(--sand);
+  }
+  .day-card.is-today .day-header{background:var(--ink);color:var(--cream);}
+  .day-dow{font-size:.75rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;}
+  .day-date{font-size:.65rem;opacity:.65;}
+  .today-badge{
+    font-size:.52rem;background:var(--rust);color:#fff;
+    padding:2px 7px;border-radius:3px;letter-spacing:.05em;
+  }
+
+  .tasks-list{display:flex;flex-direction:column;}
+  .task-row{
+    display:flex;align-items:center;
+    padding:.6rem .8rem;border-top:1px solid var(--border);
+    cursor:pointer;user-select:none;
+    gap:.7rem;min-height:50px;
+  }
+  .task-row:first-child{border-top:none;}
+  .task-row:active{background:rgba(0,0,0,.04);}
+
+  .task-emoji{font-size:1rem;flex-shrink:0;width:22px;text-align:center;}
+  .task-name{font-size:.7rem;color:#666;flex:1;}
+  .task-person{
+    font-size:.72rem;font-weight:500;
+    padding:.28rem .7rem;border-radius:20px;flex-shrink:0;
+  }
+  .task-person.edo{background:var(--c-edo);color:var(--c-edo-t);}
+  .task-person.ag {background:var(--c-ag); color:var(--c-ag-t);}
+  .task-person.an {background:var(--c-an); color:var(--c-an-t);}
+  .task-person.none{background:transparent;color:#ccc;font-weight:400;font-size:.62rem;}
+  .task-check{font-size:1rem;color:var(--sage);flex-shrink:0;width:20px;text-align:center;display:none;}
+
+  .task-row.done .task-person{opacity:.28;}
+  .task-row.done .task-name{opacity:.28;}
+  .task-row.done .task-emoji{opacity:.28;}
+  .task-row.done .task-check{display:block;}
+
+  .footer{
+    padding:.6rem 1rem;border-top:1px solid var(--border);
+    display:flex;justify-content:flex-end;gap:.5rem;
+    background:var(--cream);
+  }
+  .footer button{
+    background:none;border:1.5px solid var(--border);color:#888;
+    font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:.07em;
+    text-transform:uppercase;padding:.35rem .75rem;cursor:pointer;border-radius:4px;
+  }
+  .footer button:active{border-color:var(--rust);color:var(--rust);}
+
+  @media(min-width:600px){
+    body{max-width:480px;margin:0 auto;box-shadow:0 0 40px rgba(0,0,0,.08);}
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="top-row">
+    <div>
+      <div class="title">Casa <em>Turni</em></div>
+      <div class="subtitle">16 apr — 29 giu 2026</div>
+    </div>
+    <div class="stats-mini">
+      <div class="stat edo"><small>Edo</small><span id="s0">–</span></div>
+      <div class="stat ag"><small>Agnese</small><span id="s1">–</span></div>
+      <div class="stat an"><small>Andrea</small><span id="s2">–</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="week-nav">
+  <button id="btnP" onclick="cw(-1)">←</button>
+  <div class="week-info">
+    <div class="week-label" id="wlabel"></div>
+    <div class="week-sub" id="wsub"></div>
+  </div>
+  <button id="btnN" onclick="cw(1)">→</button>
+</div>
+
+<div class="days-scroll" id="days"></div>
+
+<div class="footer">
+  <button onclick="resetWeek()">reset settimana</button>
+  <button onclick="resetAll()">reset tutto</button>
+</div>
+
+<script>
+const S={
+  "2026-04-16":{c:0,b:null,p:null},
+  "2026-04-17":{c:0,b:null,p:0},
+  "2026-04-20":{c:1,b:null,p:0},
+  "2026-04-21":{c:2,b:null,p:null},
+  "2026-04-22":{c:0,b:1,p:2},
+  "2026-04-23":{c:1,b:null,p:null},
+  "2026-04-24":{c:1,b:null,p:1},
+  "2026-04-27":{c:2,b:null,p:1},
+  "2026-04-28":{c:0,b:null,p:null},
+  "2026-04-29":{c:1,b:2,p:0},
+  "2026-04-30":{c:2,b:null,p:null},
+  "2026-05-01":{c:0,b:null,p:0},
+  "2026-05-04":{c:0,b:null,p:2},
+  "2026-05-05":{c:1,b:null,p:null},
+  "2026-05-06":{c:2,b:0,p:1},
+  "2026-05-07":{c:0,b:null,p:null},
+  "2026-05-08":{c:1,b:null,p:1},
+  "2026-05-11":{c:1,b:null,p:0},
+  "2026-05-12":{c:2,b:null,p:null},
+  "2026-05-13":{c:0,b:1,p:2},
+  "2026-05-14":{c:1,b:null,p:null},
+  "2026-05-15":{c:0,b:null,p:0},
+  "2026-05-18":{c:2,b:null,p:1},
+  "2026-05-19":{c:0,b:null,p:null},
+  "2026-05-20":{c:1,b:2,p:0},
+  "2026-05-21":{c:2,b:null,p:null},
+  "2026-05-22":{c:1,b:null,p:1},
+  "2026-05-25":{c:0,b:null,p:2},
+  "2026-05-26":{c:1,b:null,p:null},
+  "2026-05-27":{c:2,b:0,p:1},
+  "2026-05-28":{c:0,b:null,p:null},
+  "2026-05-29":{c:0,b:null,p:0},
+  "2026-06-01":{c:1,b:null,p:0},
+  "2026-06-02":{c:2,b:null,p:null},
+  "2026-06-03":{c:0,b:1,p:2},
+  "2026-06-04":{c:1,b:null,p:null},
+  "2026-06-05":{c:1,b:null,p:1},
+  "2026-06-08":{c:2,b:null,p:1},
+  "2026-06-09":{c:0,b:null,p:null},
+  "2026-06-10":{c:1,b:2,p:0},
+  "2026-06-11":{c:2,b:null,p:null},
+  "2026-06-12":{c:0,b:null,p:0},
+  "2026-06-15":{c:0,b:null,p:2},
+  "2026-06-16":{c:1,b:null,p:null},
+  "2026-06-17":{c:2,b:0,p:1},
+  "2026-06-18":{c:0,b:null,p:null},
+  "2026-06-19":{c:1,b:null,p:1},
+  "2026-06-22":{c:1,b:null,p:0},
+  "2026-06-23":{c:2,b:null,p:null},
+  "2026-06-24":{c:0,b:1,p:2},
+  "2026-06-25":{c:1,b:null,p:null},
+  "2026-06-26":{c:0,b:null,p:0},
+  "2026-06-29":{c:2,b:null,p:1}
+};
+
+const START=new Date("2026-04-16"),END=new Date("2026-06-29");
+const TASKS=[{k:'c',e:'🍳',n:'Cucina'},{k:'b',e:'🚿',n:'Bagno'},{k:'p',e:'🧹',n:'Pavimento'}];
+const MESI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+const GIORNI=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const CLS={0:'edo',1:'ag',2:'an'};
+const LBL={0:'Edo',1:'Agnese',2:'Andrea'};
+const LS='casa_turni_v4';
+
+function getWeeks(){
+  const w=[],d=new Date(START),dow=d.getDay();
+  d.setDate(d.getDate()-(dow===0?6:dow-1));
+  while(d<=END){w.push(new Date(d));d.setDate(d.getDate()+7);}
+  return w;
+}
+const WEEKS=getWeeks();
+let wi=0;
+(function(){
+  const t=new Date();t.setHours(0,0,0,0);
+  for(let i=0;i<WEEKS.length;i++){
+    const s=new Date(WEEKS[i]);s.setDate(WEEKS[i].getDate()+6);
+    if(t>=WEEKS[i]&&t<=s){wi=i;return;}
+  }
+})();
+
+const toKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const load=()=>{try{return JSON.parse(localStorage.getItem(LS)||'{}');}catch{return{};}};
+const save=d=>localStorage.setItem(LS,JSON.stringify(d));
+
+function initStorage(){
+  if(localStorage.getItem(LS)===null) save({});
+}
+
+function toggle(ds,tk){
+  const d=load(),k=`${ds}_${tk}`;d[k]=!d[k];save(d);render();
+}
+
+function updateStats(){
+  const d=load(),tot=[0,0,0],dn=[0,0,0];
+  Object.entries(S).forEach(([ds,e])=>{
+    ['c','b','p'].forEach(tk=>{
+      const p=e[tk];if(p===null||p===undefined)return;
+      tot[p]++;if(d[`${ds}_${tk}`])dn[p]++;
+    });
+  });
+  [0,1,2].forEach(i=>document.getElementById('s'+i).textContent=`${dn[i]}/${tot[i]}`);
+}
+
+function render(){
+  const mon=WEEKS[wi],d=load();
+  const today=new Date();today.setHours(0,0,0,0);
+  const fri=new Date(mon);fri.setDate(mon.getDate()+4);
+  const f=x=>`${x.getDate()}/${x.getMonth()+1}`;
+  document.getElementById('wlabel').textContent=`${f(mon)} – ${f(fri)}`;
+  document.getElementById('wsub').textContent=`Settimana ${wi+1} di ${WEEKS.length}`;
+  document.getElementById('btnP').disabled=wi===0;
+  document.getElementById('btnN').disabled=wi===WEEKS.length-1;
+
+  const container=document.getElementById('days');
+  container.innerHTML='';
+
+  for(let i=0;i<5;i++){
+    const x=new Date(mon);x.setDate(mon.getDate()+i);
+    const ds=toKey(x);
+    const inRange=x>=START&&x<=END;
+    const e=S[ds];
+    const isToday=x.getTime()===today.getTime();
+
+    const card=document.createElement('div');
+    card.className='day-card'+(isToday?' is-today':'');
+    if(!inRange) card.style.opacity='.4';
+
+    const hdr=document.createElement('div');
+    hdr.className='day-header';
+    hdr.innerHTML=`
+      <span class="day-dow">${GIORNI[x.getDay()]}</span>
+      <span class="day-date">${x.getDate()} ${MESI[x.getMonth()]}</span>
+      ${isToday?'<span class="today-badge">oggi</span>':''}
+    `;
+    card.appendChild(hdr);
+
+    const list=document.createElement('div');
+    list.className='tasks-list';
+
+    TASKS.forEach(({k,e:em,n})=>{
+      const row=document.createElement('div');
+      row.className='task-row';
+
+      if(!inRange||!e||e[k]===null||e[k]===undefined){
+        row.innerHTML=`<span class="task-emoji" style="opacity:.25">${em}</span><span class="task-name">${n}</span><span class="task-person none">—</span>`;
+        list.appendChild(row);return;
+      }
+
+      const p=e[k],dk=`${ds}_${k}`,isDone=!!d[dk];
+      if(isDone)row.classList.add('done');
+      row.innerHTML=`
+        <span class="task-emoji">${em}</span>
+        <span class="task-name">${n}</span>
+        <span class="task-person ${CLS[p]}">${LBL[p]}</span>
+        <span class="task-check">✓</span>
+      `;
+      row.onclick=()=>toggle(ds,k);
+      list.appendChild(row);
+    });
+
+    card.appendChild(list);
+    container.appendChild(card);
+  }
+
+  updateStats();
+
+  if(wi===getCurrentWeekIdx()){
+    const todayCard=container.querySelector('.is-today');
+    if(todayCard)setTimeout(()=>todayCard.scrollIntoView({behavior:'smooth',block:'nearest'}),80);
+  }
+}
+
+function getCurrentWeekIdx(){
+  const t=new Date();t.setHours(0,0,0,0);
+  for(let i=0;i<WEEKS.length;i++){
+    const s=new Date(WEEKS[i]);s.setDate(WEEKS[i].getDate()+6);
+    if(t>=WEEKS[i]&&t<=s)return i;
+  }
+  return 0;
+}
+
+function cw(delta){wi=Math.max(0,Math.min(WEEKS.length-1,wi+delta));render();}
+
+function resetWeek(){
+  const d=load(),mon=WEEKS[wi];
+  for(let i=0;i<5;i++){
+    const x=new Date(mon);x.setDate(mon.getDate()+i);
+    const ds=toKey(x);
+    ['c','b','p'].forEach(tk=>delete d[`${ds}_${tk}`]);
+  }
+  save(d);render();
+}
+
+function resetAll(){
+  if(confirm('Resettare tutti i tuoi progressi?')){localStorage.removeItem(LS);initStorage();render();}
+}
+
+initStorage();
+render();
+</script>
+</body>
+</html>
