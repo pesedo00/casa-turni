@@ -206,7 +206,7 @@ const S={
 };
 
 const START=new Date("2026-04-16"),END=new Date("2026-06-29");
-const TASKS=[{k:'c',e:'🍳',n:'Cucina'},{k:'b',e:'🚿',n:'Bagno'},{k:'p',e:'🧹',n:'Pavimento'}];
+const TASKS=[{k:'c',em:'🍳',n:'Cucina'},{k:'b',em:'🚿',n:'Bagno'},{k:'p',em:'🧹',n:'Pavimento'}];
 const MESI=['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
 const GIORNI=['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
 const CLS={0:'edo',1:'ag',2:'an'};
@@ -288,16 +288,11 @@ function render(){
     const list=document.createElement('div');
     list.className='tasks-list';
 
-    TASKS.forEach(({k,e:em,n})=>{
-      const row=document.createElement('div');
-      row.className='task-row';
-
-      if(!inRange||!e||e[k]===null||e[k]===undefined){
-        return; // nascondi righe senza task
-      }
-
+    TASKS.forEach(({k,em,n})=>{
+      if(!inRange||!e||e[k]===null||e[k]===undefined) return;
       const p=e[k],dk=`${ds}_${k}`,isDone=!!d[dk];
-      if(isDone)row.classList.add('done');
+      const row=document.createElement('div');
+      row.className='task-row'+(isDone?' done':'');
       row.innerHTML=`
         <span class="task-emoji">${em}</span>
         <span class="task-name">${n}</span>
