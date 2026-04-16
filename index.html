@@ -293,8 +293,7 @@ function render(){
       row.className='task-row';
 
       if(!inRange||!e||e[k]===null||e[k]===undefined){
-        row.innerHTML=`<span class="task-emoji" style="opacity:.25">${em}</span><span class="task-name">${n}</span><span class="task-person none">—</span>`;
-        list.appendChild(row);return;
+        return; // nascondi righe senza task
       }
 
       const p=e[k],dk=`${ds}_${k}`,isDone=!!d[dk];
@@ -309,7 +308,14 @@ function render(){
       list.appendChild(row);
     });
 
-    card.appendChild(list);
+    if(list.children.length===0){
+      const empty=document.createElement('div');
+      empty.style.cssText='padding:.6rem .8rem;font-size:.65rem;color:#bbb;';
+      empty.textContent='nessuna task';
+      card.appendChild(empty);
+    } else {
+      card.appendChild(list);
+    }
     container.appendChild(card);
   }
 
